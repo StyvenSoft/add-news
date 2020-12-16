@@ -5,12 +5,11 @@ import microConfig from "./mikro-orm.config";
 
 const main = async () => {
     const orm = await MikroORM.init(microConfig);
+    await orm.getMigrator().up();
 
     const post = orm.em.create(Post, {title: 'My title'});
     await orm.em.persistAndFlush(post);
-    console.log("--sql2--");
-    await orm.em.nativeInsert(Post, {title: 'My title native'});
-    
+        
 };
 
 main().catch((err) => {
