@@ -36,6 +36,7 @@ const main = async () => {
                 sameSite: "lax", // csrf
                 secure: __prod__, // cookie only works in https
             },
+            saveUninitialized: false,
             secret: 'sadwdaswfegresawex',
             resave: false,
         })
@@ -46,7 +47,7 @@ const main = async () => {
             resolvers: [testResolver, postResolver, userResolver],
             validate: false
         }),
-        context: ({ req, res }): MyContext => ({ em: orm.em, req, res })
+        context: ({ req, res }): MyContext => <MyContext>({em: orm.em, req, res}),
     });
 
     apolloServer.applyMiddleware({ app });
