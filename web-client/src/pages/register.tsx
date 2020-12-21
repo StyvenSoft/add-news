@@ -5,21 +5,23 @@ import { useMutation } from 'urql';
 import { InputField } from '../components/InputField';
 import { Wrapper } from '../components/Wrapper';
 import { useRegisterMutation } from '../generated/graphql';
+import { toErroMap } from '../utils/toErrorMap';
+import { useRouter } from 'next/router';
 
 interface registerProps { }
 
 const register: React.FC<registerProps> = ({ }) => {
+    const router = useRouter();
     const [, register] = useRegisterMutation();
     return (
         <Wrapper variant="small">
             <Formik initialValues={{ username: "", password: "" }}
                 onSubmit={async (values, { setErrors }) => {
                     const response = await register(values);
-                    if(response.data?.register.errors) {
-                        [{field: "username", message: "Something wrong"}]
-                        setErrors({
-                            username: "Error completed username"
-                        })
+                    if (response.data?.register.errors) {
+                        setErrors(toErroMap(response.data.register.errors));
+                    } else if (response.data?.register.user) {
+                        router.push('/');
                     }
                 }}>
                 {(props) => (
