@@ -2,6 +2,7 @@ import { User } from "../entities/User";
 import { MyContext } from "../types";
 import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from "type-graphql";
 import argon2 from "argon2";
+import { EntityManager } from '@mikro-orm/postgresql';
 
 @InputType()
 class UsernamePasswordInput {
@@ -32,12 +33,12 @@ class UserResponse {
 @Resolver()
 export class userResolver {
     @Query(() => User, { nullable: true })
-    async me(@Ctx() { req, em }: MyContext ) {
+    async me(@Ctx() { req, em }: MyContext) {
         // Your not logged in
-        if(!req.session.id) {
-            return null 
+        if (!req.session.id) {
+            return null
         }
-        const user = await em.findOne(User, {id: req.session.userId} );
+        const user = await em.findOne(User, { id: req.session.userId });
         return user;
     }
 
@@ -69,14 +70,17 @@ export class userResolver {
         }
 
         const hashedPassword = await argon2.hash(options.password);
-        const user = em.create(User, {
-            username: options.username,
-            password: hashedPassword
-        });
+        let user;
         try {
-            await em.persistAndFlush(user);
+            const result = await (em as EntityManager).createQueryBuilder(User).getKnexQuery().insert({
+                username: options.username,
+                password: hashedPassword,
+                created_at: new Date(),
+                updated_at: new Date(),
+            }).returning("*");
+            user = result[0];
         } catch (err) {
-            if ( err.code === "23505" ) {
+            if (err.code === "23505") {
                 return {
                     errors: [
                         {
@@ -87,7 +91,7 @@ export class userResolver {
                 };
             }
         }
-        
+
         req.session.userId = user.id;
         return { user };
     }
