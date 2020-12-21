@@ -16,6 +16,7 @@ const register: React.FC<registerProps> = ({ }) => {
                 onSubmit={async (values, { setErrors }) => {
                     const response = await register(values);
                     if(response.data?.register.errors) {
+                        [{field: "username", message: "Something wrong"}]
                         setErrors({
                             username: "Error completed username"
                         })
