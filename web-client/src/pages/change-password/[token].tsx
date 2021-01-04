@@ -1,21 +1,37 @@
-import { Button } from "@chakra-ui/react";
-import { Formik, Form } from "formik";
+import { Box, Button, Link, Flex } from "@chakra-ui/react";
+import { Form, Formik } from "formik";
 import { NextPage } from "next";
-import React from "react";
+import { withUrqlClient } from 'next-urql';
+import { useRouter } from "next/router";
+import React, { useState } from "react";
 import { InputField } from "../../components/InputField";
 import { Wrapper } from "../../components/Wrapper";
+import { useChangePasswordMutation } from '../../generated/graphql';
+import { createUrqlClient } from "../../utils/createUrqlClient";
+import { toErroMap } from "../../utils/toErrorMap";
+import NextLink from "next/link";
 
 const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
+    const router = useRouter();
+    const [, changePassword] = useChangePasswordMutation();
+    const [tokenError, setTokenError] = useState("");
     return (
         <Wrapper variant="small">
-            <Formik initialValues={{ newPassword: '' }}
+            <Formik initialValues={{ newPassword: "" }}
                 onSubmit={async (values, { setErrors }) => {
-                    //     const response = await login(values);
-                    //     if (response.data?.login.errors) {
-                    //         setErrors(toErroMap(response.data.login.errors));
-                    //     } else if (response.data?.login.user) {
-                    //         router.push('/');
-                    //     }
+                        const response = await changePassword({
+                            newPassword: values.newPassword,
+                            token,
+                        });
+                        if (response.data?.changePassword.errors) {
+                            const errorMap = toErroMap(response.data.changePassword.errors) 
+                            if('token' in errorMap) {
+                                setTokenError(errorMap.token)
+                            }
+                            setErrors(errorMap);
+                        } else if (response.data?.changePassword.user) {
+                            router.push('/');
+                        }
                     }
                 }
             >
@@ -27,6 +43,14 @@ const ChangePassword: NextPage<{ token: string }> = ({ token }) => {
                             label="New Password"
                             type="password"
                         />
+                        { tokenError ? (
+                            <Flex>
+                                <Box mr={2} style={{ color: "red"}}>{tokenError}</Box>
+                                <NextLink href="/forgot-password">
+                                    <Link>Click here to get a new one</Link>
+                                </NextLink>
+                            </Flex>
+                            ) : null }
                         <Button mt={4} type="submit" isLoading={props.isSubmitting} colorScheme="teal">
                             Change Password
                         </Button>
@@ -43,4 +67,4 @@ ChangePassword.getInitialProps = ({ query }) => {
     }
 }
 
-export default ChangePassword;
+export default withUrqlClient(createUrqlClient)(ChangePassword);
