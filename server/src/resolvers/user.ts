@@ -1,13 +1,13 @@
+import argon2 from "argon2";
+import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
+import { getConnection } from "typeorm";
+import { v4 } from 'uuid';
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
-import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from "type-graphql";
-import argon2 from "argon2";
-import { EntityManager } from '@mikro-orm/postgresql';
-import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
-import { UsernamePasswordInput } from "./UsernamePasswordInput";
-import { validateRegister } from "../utils/validateRegister";
 import { sendEmail } from "../utils/sendEmail";
-import { v4 } from 'uuid';
+import { validateRegister } from "../utils/validateRegister";
+import { UsernamePasswordInput } from "./UsernamePasswordInput";
 
 @ObjectType()
 class FieldError {
@@ -29,25 +29,26 @@ class UserResponse {
 
 @Resolver()
 export class userResolver {
-    @Mutation(() => UserResponse) 
+    @Mutation(() => UserResponse)
     async changePassword(
         @Arg("token") token: string,
         @Arg("newPassword") newPassword: string,
         @Ctx() { redis, req }: MyContext
     ): Promise<UserResponse> {
         if (newPassword.length <= 3) {
-            return { errors:  
-                [
-                    {
-                        field: "newPassword",
-                        message: "Lenght must be greater than 3"
-                    },
-                ] 
+            return {
+                errors:
+                    [
+                        {
+                            field: "newPassword",
+                            message: "Lenght must be greater than 3"
+                        },
+                    ]
             };
         }
         const key = FORGET_PASSWORD_PREFIX + token;
         const userId = await redis.get(key);
-        if(!userId) {
+        if (!userId) {
             return {
                 errors: [
                     {
@@ -59,7 +60,7 @@ export class userResolver {
         }
         const userIdNum = parseInt(userId);
         const user = await User.findOne(userIdNum);
-        if(!user) {
+        if (!user) {
             return {
                 errors: [
                     {
@@ -71,7 +72,7 @@ export class userResolver {
         }
 
         await User.update(
-            { id: userIdNum},
+            { id: userIdNum },
             { password: await argon2.hash(newPassword) }
         );
 
@@ -84,14 +85,14 @@ export class userResolver {
 
     @Mutation(() => Boolean)
     async forgotPassword(@Arg("email") email: string, @Ctx() { redis }: MyContext) {
-        const user = await User.findOne( { where: { email } });
+        const user = await User.findOne({ where: { email } });
         if (!user) {
             // The email is not in DB
             return true;
         }
         const token = v4();
         await redis.set(FORGET_PASSWORD_PREFIX + token, user.id, 'ex', 1000 * 60 * 60 * 24 * 3); // 3 days
-        await sendEmail(email, 
+        await sendEmail(email,
             `<a href="http://localhost:3000/change-password/${token}">Reset Password</a>`)
         return true;
     }
@@ -108,7 +109,7 @@ export class userResolver {
     @Mutation(() => UserResponse)
     async register(
         @Arg("options") options: UsernamePasswordInput,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
         const errors = validateRegister(options);
         if (errors) {
@@ -119,14 +120,16 @@ export class userResolver {
         const hashedPassword = await argon2.hash(options.password);
         let user;
         try {
-            const result = await (em as EntityManager).createQueryBuilder(User).getKnexQuery().insert({
-                username: options.username,
-                email: options.email,
-                password: hashedPassword,
-                created_at: new Date(),
-                updated_at: new Date(),
-            }).returning("*");
-            user = result[0];
+            const result = await getConnection().createQueryBuilder().insert().into(User).values(
+                {
+                    username: options.username,
+                    email: options.email,
+                    password: hashedPassword,
+                }
+            )
+                .returning("*")
+                .execute();
+            user = result.raw[0];
         } catch (err) {
             if (err.code === "23505") {
                 return {
@@ -148,13 +151,12 @@ export class userResolver {
     async login(
         @Arg("usernameOrEmail") usernameOrEmail: string,
         @Arg("password") password: string,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
-        const user = await em.findOne(
-            User,
+        const user = await User.findOne(
             usernameOrEmail.includes("@")
-            ? { email: usernameOrEmail }
-            : { username: usernameOrEmail } 
+                ? { where: { email: usernameOrEmail } }
+                : { where: { username: usernameOrEmail } }
         );
         if (!user) {
             return {
@@ -186,8 +188,8 @@ export class userResolver {
     }
 
     @Mutation(() => Boolean)
-    logout (@Ctx() { req, res }: MyContext) {
-        return new Promise ((resolve) => 
+    logout(@Ctx() { req, res }: MyContext) {
+        return new Promise((resolve) =>
             req.session.destroy((err) => {
                 res.clearCookie(COOKIE_NAME);
                 if (err) {
