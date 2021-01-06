@@ -33,7 +33,7 @@ export class userResolver {
     async changePassword(
         @Arg("token") token: string,
         @Arg("newPassword") newPassword: string,
-        @Ctx() { redis, em, req }: MyContext
+        @Ctx() { redis, req }: MyContext
     ): Promise<UserResponse> {
         if (newPassword.length <= 3) {
             return { errors:  
@@ -57,7 +57,8 @@ export class userResolver {
                 ]
             }
         }
-        const user = await em.findOne(User, { id: parseInt(userId) });
+        const userIdNum = parseInt(userId);
+        const user = await User.findOne(userIdNum);
         if(!user) {
             return {
                 errors: [
@@ -69,8 +70,11 @@ export class userResolver {
             }
         }
 
-        user.password = await argon2.hash(newPassword);
-        await em.persistAndFlush(user);
+        await User.update(
+            { id: userIdNum},
+            { password: await argon2.hash(newPassword) }
+        );
+
         await redis.del(key);
         // Login user after change password
         req.session.userId = user.id;
@@ -79,8 +83,8 @@ export class userResolver {
     }
 
     @Mutation(() => Boolean)
-    async forgotPassword(@Arg("email") email: string, @Ctx() { em, redis }: MyContext) {
-        const user = await em.findOne(User, { email });
+    async forgotPassword(@Arg("email") email: string, @Ctx() { redis }: MyContext) {
+        const user = await User.findOne( { where: { email } });
         if (!user) {
             // The email is not in DB
             return true;
@@ -93,13 +97,12 @@ export class userResolver {
     }
 
     @Query(() => User, { nullable: true })
-    async me(@Ctx() { req, em }: MyContext) {
+    me(@Ctx() { req }: MyContext) {
         // Your not logged in
         if (!req.session.id) {
             return null
         }
-        const user = await em.findOne(User, { id: req.session.userId });
-        return user;
+        return User.findOne(req.session.userId);
     }
 
     @Mutation(() => UserResponse)
