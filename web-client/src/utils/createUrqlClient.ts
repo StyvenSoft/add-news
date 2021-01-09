@@ -2,9 +2,23 @@ import { dedupExchange, fetchExchange } from "urql";
 import { cacheExchange } from '@urql/exchange-graphcache';
 import { LoginMutation, MeQuery, MeDocument, RegisterMutation, LogoutMutation } from "../generated/graphql";
 import { betterUpdateQuery } from "./betterUpdateQuery";
+import { pipe, tap } from 'wonka';
+import { Exchange } from 'urql';
+import Router from 'next/router';
+
+const errorExchange: Exchange = ({ forward }) => ops$ => {
+  return pipe(
+    forward(ops$),
+    tap(({ error }) => {
+      if (error?.message.includes("Not authenticated")) {
+        Router.replace("/login");
+      }
+    })
+  );
+};
 
 export const createUrqlClient = (ssrExchange: any) => ({
-    url: 'http://localhost:4000/graphql',
+  url: 'http://localhost:4000/graphql',
   fetchOptions: {
     credentials: "include" as const,
   },
@@ -21,7 +35,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
         },
         login: (_result, args, cache, info) => {
           betterUpdateQuery<LoginMutation, MeQuery>(
-            cache, 
+            cache,
             { query: MeDocument },
             _result,
             (result, query) => {
@@ -37,7 +51,7 @@ export const createUrqlClient = (ssrExchange: any) => ({
         },
         register: (_result, args, cache, info) => {
           betterUpdateQuery<RegisterMutation, MeQuery>(
-            cache, 
+            cache,
             { query: MeDocument },
             _result,
             (result, query) => {
@@ -53,5 +67,5 @@ export const createUrqlClient = (ssrExchange: any) => ({
         },
       }
     }
-  }), ssrExchange, fetchExchange],
+  }), errorExchange, ssrExchange, fetchExchange],
 }); 
