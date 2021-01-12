@@ -1,9 +1,14 @@
-import { dedupExchange, fetchExchange } from "urql";
+import { dedupExchange, Exchange, fetchExchange } from "urql";
 import { cacheExchange } from '@urql/exchange-graphcache';
-import { LoginMutation, MeQuery, MeDocument, RegisterMutation, LogoutMutation } from "../generated/graphql";
+import { 
+  LoginMutation, 
+  MeQuery, 
+  MeDocument, 
+  RegisterMutation, 
+  LogoutMutation 
+} from "../generated/graphql";
 import { betterUpdateQuery } from "./betterUpdateQuery";
 import { pipe, tap } from 'wonka';
-import { Exchange } from 'urql';
 import Router from 'next/router';
 
 const errorExchange: Exchange = ({ forward }) => ops$ => {
