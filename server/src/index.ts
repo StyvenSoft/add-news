@@ -13,19 +13,22 @@ import cors from 'cors';
 import { createConnection } from 'typeorm';
 import { Post } from './entities/Post';
 import { User } from './entities/User';
+import path from 'path';
 // import { User } from './entities/User';
 // import { sendEmail } from './utils/sendEmail';
 
 const main = async () => {
-    await createConnection({
+    const conn = await createConnection({
         type: "postgres",
         database: "addnews",
         username: "postgres",
         password: "postgres",
         logging: true,
         synchronize: true,
+        migrations: [path.join(__dirname, "./migrations/*")],
         entities: [Post, User],
     });
+    await conn.runMigrations();
     // sendEmail("test@test.com", "Hello test welcome");
     // await orm.em.nativeDelete(User, {})
 
