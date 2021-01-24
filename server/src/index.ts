@@ -28,7 +28,7 @@ const main = async () => {
         migrations: [path.join(__dirname, "./migrations/*")],
         entities: [Post, User],
     });
-    await conn.runMigrations();
+    // await conn.runMigrations();
     // sendEmail("test@test.com", "Hello test welcome");
     // await orm.em.nativeDelete(User, {})
 
