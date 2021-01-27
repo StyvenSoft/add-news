@@ -29,6 +29,11 @@ TypeORM is definitely the most mature Object Relational Mapper (ORM) available i
 
 [Creating a connection](https://typeorm.io/#/undefined/creating-a-connection-to-the-database) to the database
 
+
+```sh
+npx typeorm migration:create -n test
+```
+
 > server/index.ts
 
 ```js
