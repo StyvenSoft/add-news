@@ -53,6 +53,8 @@ const Index = () => {
             isLoading={fetching}
             m="auto"
             my={8}
+            colorScheme="blue"
+            variant="outline"
           >
             Load more
           </Button>

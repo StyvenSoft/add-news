@@ -1,11 +1,11 @@
 import { dedupExchange, Exchange, fetchExchange, stringifyVariables } from "urql";
 import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
-import { 
-  LoginMutation, 
-  MeQuery, 
-  MeDocument, 
-  RegisterMutation, 
-  LogoutMutation 
+import {
+  LoginMutation,
+  MeQuery,
+  MeDocument,
+  RegisterMutation,
+  LogoutMutation
 } from "../generated/graphql";
 import { betterUpdateQuery } from "./betterUpdateQuery";
 import { pipe, tap } from 'wonka';
@@ -23,12 +23,10 @@ const errorExchange: Exchange = ({ forward }) => ops$ => {
 };
 
 const cursorPagination = (): Resolver => {
-  
-
   return (_parent, fieldArgs, cache, info) => {
     const { parentKey: entityKey, fieldName } = info;
-
     const allFields = cache.inspectFields(entityKey);
+    console.log("allFields: ", allFields);
     const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
     const size = fieldInfos.length;
     if (size === 0) {
@@ -38,7 +36,7 @@ const cursorPagination = (): Resolver => {
     const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
     const isItInTheCache = cache.resolve(entityKey, fieldKey);
     info.partial = !isItInTheCache;
-    const results: String[] = [];
+    const results: string[] = [];
     fieldInfos.forEach((fi) => {
       const data = cache.resolve(entityKey, fi.fieldKey) as string[];
       results.push(...data);
