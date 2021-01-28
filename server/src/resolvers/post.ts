@@ -1,5 +1,5 @@
 import { MyContext } from "../types";
-import { Arg, Ctx, Field, FieldResolver, InputType, Int, Mutation, Query, Resolver, Root, UseMiddleware } from "type-graphql";
+import { Arg, Ctx, Field, FieldResolver, InputType, Int, Mutation, Query, Resolver, Root, UseMiddleware, ObjectType } from "type-graphql";
 import { Post } from "../entities/Post";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
@@ -12,32 +12,54 @@ class PostInput {
     text: string
 }
 
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts: Post[];
+}
+
 @Resolver(Post)
 export class postResolver {
     @FieldResolver(() => String)
-    textSnippet(@Root() root: Post) {
-        return root.text.slice(0, 80);
+    textSnippet(@Root() post: Post) {
+        return post.text.slice(0, 80);
     }
 
-    @Query(() => [Post])
+    @Query(() => PaginatedPosts)
     async posts(
         @Arg('limit', () => Int) limit: number,
         @Arg('cursor', () => String, { nullable: true }) cursor: string | null
-    ): Promise<Post[]> {
+    ): Promise<PaginatedPosts> {
         const realLimit = Math.min(50, limit)
-        const qb = getConnection()
-            .getRepository(Post)
-            .createQueryBuilder("p")
-            .orderBy('"createdAt"', "DESC")
-            .take(realLimit);
-            
-        if (cursor) {
-            qb.where('"createdAt" < :cursor', {
-                cursor: new Date(parseInt(cursor)),
-            });
-        };
+        const reaLimitPlusOne = realLimit + 1;
 
-        return qb.getMany();
+        const replacements: any[] = [reaLimitPlusOne];
+
+        if (cursor) {
+            replacements.push(new Date(parseInt(cursor)));
+        }
+
+        const posts = await getConnection().query(`
+            select p.*,
+            json_build_object(
+                    'id', u.id,
+                    'username', u.username,
+                    'email', u.email,
+                    'createdAt', u."createdAt",
+                    'updatedAt', u."updatedAt"
+                ) creator
+            from post p
+            inner join public.user u on u.id = p."creatorId"
+            ${cursor ? `where p."createdAt" < $2` : ""}
+            order by p."createdAt" DESC
+            limit $1
+        `,
+            replacements
+        );
+
+        return {
+            posts: posts.slice(0, realLimit),
+        };
     }
 
     @Query(() => Post, { nullable: true })
