@@ -3,7 +3,7 @@ import { Arg, Ctx, Field, FieldResolver, InputType, Int, Mutation, Query, Resolv
 import { Post } from "../entities/Post";
 import { isAuth } from "../middleware/isAuth";
 import { getConnection } from "typeorm";
-import { Updoot } from "src/entities/Updoot";
+// import { Updoot } from "../entities/Updoot";
 
 @InputType()
 class PostInput {
@@ -15,8 +15,10 @@ class PostInput {
 
 @ObjectType()
 class PaginatedPosts {
-  @Field(() => [Post])
-  posts: Post[];
+    @Field(() => [Post])
+    posts: Post[];
+    @Field()
+    hasMore: boolean;
 }
 
 @Resolver(Post)
@@ -31,16 +33,27 @@ export class postResolver {
     async vote(
         @Arg('postId', () => Int) postId: number,
         @Arg('value', () => Int) value: number,
-        @Ctx() {req}: MyContext
+        @Ctx() { req }: MyContext
     ) {
         const isUpdoot = value !== -1;
         const realValue = isUpdoot ? 1 : -1
         const { userId } = req.session;
-        await Updoot.insert({
-            userId,
-            postId,
-            value: realValue,
-        })
+        // await Updoot.insert({
+        //     userId,
+        //     postId,
+        //     value: realValue,
+        // })
+
+        await getConnection().query(`
+            START TRANSACTION;
+            insert into updoot ("userId", "postId", value)
+            values (${userId},${postId},${realValue});
+            update post
+            set points = points + ${realValue}
+            where id = ${postId};
+            COMMIT;
+        `,
+        );
         return true;
     }
 
@@ -78,6 +91,7 @@ export class postResolver {
 
         return {
             posts: posts.slice(0, realLimit),
+            hasMore: posts.length === reaLimitPlusOne,
         };
     }
 
