@@ -1,4 +1,5 @@
-import { Box, Button, Flex, Heading, Stack, Text } from '@chakra-ui/react';
+import { ChevronUpIcon, ChevronDownIcon } from '@chakra-ui/icons';
+import { Box, Button, Flex, Heading, IconButton, Stack, Text } from '@chakra-ui/react';
 import { withUrqlClient } from 'next-urql';
 import NextLink from 'next/link';
 import { useState } from 'react';
@@ -32,11 +33,31 @@ const Index = () => {
       ) : (
           <Stack spacing={8}>
             {data!.posts.posts.map((p) => (
-              <Box key={p.id} p={5} shadow="md" borderWidth="1px">
-                <Heading fontSize="xl">{p.title}</Heading>
-                <Text>Posted by <strong>{p.creator.username}</strong></Text>
-                <Text mt={4}>{p.textSnippet}</Text>
-              </Box>
+              <Flex key={p.id} p={5} shadow="md" borderWidth="1px">
+                <Flex
+                  direction="column"
+                  justifyContent="center"
+                  alignItems="center"
+                  mr={4}
+                >
+                  <IconButton 
+                    aria-label="updoot post"
+                    colorScheme="teal"
+                    icon={<ChevronUpIcon w={6} h={6} />} 
+                  />
+                  {p.points}
+                  <IconButton 
+                    aria-label="updoot post"
+                    colorScheme="red"
+                    icon={<ChevronDownIcon w={6} h={6} />} 
+                  />
+                </Flex>
+                <Box>
+                  <Heading fontSize="xl">{p.title}</Heading>
+                  <Text>Posted by <strong>{p.creator.username}</strong></Text>
+                  <Text mt={4}>{p.textSnippet}</Text>
+                </Box>
+              </Flex>
             ))}
           </Stack>
         )}
