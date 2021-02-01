@@ -24,7 +24,7 @@ const Index = () => {
   return (
     <Layout>
       <Flex mb={8}>
-        <Heading>Add News</Heading>
+        <Heading as="h4" size="md">Last News</Heading>
         <NextLink href="/create-post">
           <Button ml="auto" colorScheme="blue">Create News</Button>
         </NextLink>
