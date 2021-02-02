@@ -104,9 +104,8 @@ export class postResolver {
                     'createdAt', u."createdAt",
                     'updatedAt', u."updatedAt"
                 ) creator,
-            ${
-                req.session.userId 
-                ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"' 
+            ${req.session.userId
+                ? '(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"'
                 : 'null as "voteStatus"'
             }
             from post p
@@ -159,11 +158,12 @@ export class postResolver {
     }
 
     @Mutation(() => Boolean)
+    @UseMiddleware(isAuth)
     async deletePost(
-        @Arg("id") id: number,
+        @Arg("id", () => Int) id: number,
+        @Ctx() { req }: MyContext
     ): Promise<Boolean> {
-        await Post.delete(id);
+        await Post.delete({ id, creatorId: req.session.userId });
         return true;
     }
-
 }
