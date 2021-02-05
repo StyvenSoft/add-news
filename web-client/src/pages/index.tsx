@@ -4,7 +4,7 @@ import NextLink from 'next/link';
 import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { UpdootSection } from '../components/UpdootSection';
-import { useDeletePostMutation, usePostsQuery } from "../generated/graphql";
+import { useDeletePostMutation, useMeQuery, usePostsQuery } from "../generated/graphql";
 import { createUrqlClient } from "../utils/createUrqlClient";
 import { format } from 'timeago.js';
 import { DeleteIcon, EditIcon } from '@chakra-ui/icons';
@@ -14,6 +14,7 @@ const Index = () => {
     limit: 10,
     cursor: null as null | string,
   });
+  const [{data: meData }] = useMeQuery();
   const [{ data, fetching }] = usePostsQuery({
     variables,
   });
@@ -49,7 +50,7 @@ const Index = () => {
                     <Text>Posted by <strong>{p.creator.username}</strong> {format(p.createdAt)}</Text>
                     <Flex>
                       <Text flex={1} mt={4}>{p.textSnippet}</Text>
-                      <Box ml="auto">
+                      {meData?.me?.id !== p.creator.id ? null : <Box ml="auto">
                         <NextLink
                           href="/post/edit/[id]"
                           as={`/post/edit/${p.id}`}
@@ -70,7 +71,7 @@ const Index = () => {
                             deletePost({ id: p.id })
                           }}
                         />
-                      </Box>
+                      </Box>}
                     </Flex>
                   </Box>
                 </Flex>
