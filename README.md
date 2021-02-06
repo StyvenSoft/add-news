@@ -1,5 +1,13 @@
-<p align="center"><a href="#" target="_blank"><img src="./web-client/src/Add01.png" width="100"></a></p>
-<center><h1>Add News </h1></center>
+<p align="center"><a href="#" target="_blank"><img src="./web-client/src/Add01.png" width="100"></p>
+
+<p align="center">
+<a href="https://github.com/StyvenSoft/add-news/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/StyvenSoft/add-news"></a>
+<a href="https://github.com/StyvenSoft/add-news/network"><img alt="GitHub forks" src="https://img.shields.io/github/forks/StyvenSoft/add-news"></a>
+<a href="https://github.com/StyvenSoft/add-news/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/StyvenSoft/add-news"></a>
+<a href="https://github.com/StyvenSoft/add-news/blob/main/LICENSE"><img alt="GitHub license" src="https://img.shields.io/github/license/StyvenSoft/add-news"></a>
+</p>
+
+# Add News 
 
 A fullstack project of a social website that allows you to add news and where other users can vote for or against the content.
 
