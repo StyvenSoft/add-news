@@ -14,6 +14,7 @@ import { createConnection } from 'typeorm';
 import { Post } from './entities/Post';
 import { User } from './entities/User';
 import { Updoot } from './entities/Updoot';
+import { createUserLoader } from './utils/createUserLoader';
 // import path from 'path';
 // import { User } from './entities/User';
 // import { sendEmail } from './utils/sendEmail';
@@ -69,7 +70,12 @@ const main = async () => {
             resolvers: [testResolver, postResolver, userResolver],
             validate: false
         }),
-        context: ({ req, res }) => ({ req, res, redis }),
+        context: ({ req, res }) => ({ 
+            req, 
+            res, 
+            redis,
+            userLoader: createUserLoader(),
+        }),
     });
 
     apolloServer.applyMiddleware({ 
