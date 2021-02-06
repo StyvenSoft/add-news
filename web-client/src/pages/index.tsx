@@ -14,13 +14,18 @@ const Index = () => {
     limit: 10,
     cursor: null as null | string,
   });
-  const [{ data, fetching }] = usePostsQuery({
+  const [{ data, error, fetching }] = usePostsQuery({
     variables,
   });
 
 
   if (!fetching && !data) {
-    return <div>You got query failed for some reason.</div>
+    return (
+      <Layout>
+        <div>You got query failed for some reason.</div>
+        <div>{error?.message}</div>
+      </Layout>
+    )
   }
 
   return (
