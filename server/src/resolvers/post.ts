@@ -36,6 +36,11 @@ export class postResolver {
         return userLoader.load(post.creatorId);
     }
 
+    @FieldResolver(() => User)
+    voteStatus(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+        return;
+    }
+
     @Mutation(() => Boolean)
     @UseMiddleware(isAuth)
     async vote(
