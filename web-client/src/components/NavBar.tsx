@@ -37,8 +37,8 @@ export const NavBar: React.FC<NavBarProps> = ({ }) => {
                     {data.me.username}
                 </Button>
                 <Button
-                    onClick={() => {
-                        logout();
+                    onClick={async () => {
+                        await logout();
                     }}
                     isLoading={logoutFetching}
                     colorScheme="teal"

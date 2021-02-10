@@ -25,6 +25,10 @@ Includes the follow technologies:
 - [TypeGraphQL](https://typegraphql.com/)
 - [Chakra UI](https://chakra-ui.com/)
 
+## Preview
+
+![screencapture](./web-client/src/screencapture.jpg)
+
 ## Redis
 
 Redis is an open source (BSD licensed), in-memory data structure store, used as a database, cache, and message broker.
