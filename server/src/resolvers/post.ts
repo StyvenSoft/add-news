@@ -99,7 +99,7 @@ export class postResolver {
     async posts(
         @Arg('limit', () => Int) limit: number,
         @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-        @Ctx() { req }: MyContext
+        @Ctx() {}: MyContext
     ): Promise<PaginatedPosts> {
         const realLimit = Math.min(50, limit)
         const reaLimitPlusOne = realLimit + 1;
@@ -111,7 +111,7 @@ export class postResolver {
         }
 
         const posts = await getConnection().query(`
-            select p.*,
+            select p.*
             from post p
             ${cursor ? `where p."createdAt" < $2` : ""}
             order by p."createdAt" DESC
